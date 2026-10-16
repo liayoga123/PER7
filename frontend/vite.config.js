@@ -5,6 +5,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [react()],
   server: {
     port: 5173,
+    // Dev: proxy all /api calls to local backend
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
@@ -17,7 +18,8 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
-  define: {
-    // Available at runtime as window.__API_URL__ via import.meta.env.VITE_API_URL
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
   },
 }))

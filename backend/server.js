@@ -138,9 +138,12 @@ app.use((err, req, res, _next) => {
 });
 
 // ── Start ──────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`[ARKAVIA] Backend running on http://localhost:${PORT}`);
-  console.log(`[ARKAVIA] LAB_MODE: ${LAB_MODE}`);
+// Render.com requires listening on 0.0.0.0, not localhost
+const LISTEN_HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : (HOST || 'localhost');
+app.listen(PORT, LISTEN_HOST, () => {
+  console.log(`[ARKAVIA] Backend running on http://${LISTEN_HOST}:${PORT}`);
+  console.log(`[ARKAVIA] LAB_MODE: ${process.env.LAB_MODE}`);
+  console.log(`[ARKAVIA] NODE_ENV: ${process.env.NODE_ENV}`);
 });
 
 module.exports = app;
