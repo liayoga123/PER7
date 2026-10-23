@@ -6,7 +6,21 @@
 [build.environment]
   NODE_VERSION = "20"
 
-# SPA routing - semua path diarahkan ke index.html
+# Proxy API calls ke backend Railway/Render
+# Netlify akan forward /api/* ke BACKEND_URL yang diset di Netlify env vars
+[[redirects]]
+  from = "/api/*"
+  to = ":BACKEND_URL/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/uploads/*"
+  to = ":BACKEND_URL/uploads/:splat"
+  status = 200
+  force = true
+
+# SPA routing - semua path lain diarahkan ke index.html
 [[redirects]]
   from = "/*"
   to = "/index.html"

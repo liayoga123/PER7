@@ -3,10 +3,14 @@ import axios from 'axios';
 
 const AuthContext = createContext(null);
 
-// In production: VITE_API_URL = Railway backend URL
-// In development: empty string = Vite proxy handles /api → localhost:3001
+// Netlify proxy: semua /api/* diteruskan ke backend Railway/Render
+// (dikonfigurasi via [[redirects]] di netlify.toml + env var BACKEND_URL)
+// Di development: Vite proxy handle /api → localhost:3001
+// VITE_API_URL hanya digunakan jika deploy tanpa Netlify (langsung ke CDN lain)
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || '';
 axios.defaults.withCredentials = true;
+
+
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);

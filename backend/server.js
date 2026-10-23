@@ -65,13 +65,22 @@ const allowedOrigins = [
 ];
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin || allowedOrigins.some(o => origin.startsWith(o))) return cb(null, true);
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return cb(null, true);
+    // Allow any origin that starts with an allowed origin
+    const allowed = allowedOrigins.some(o => origin.startsWith(o));
+    if (allowed) return cb(null, true);
+    // In development, allow all localhost origins
+    if (process.env.NODE_ENV !== 'production' && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+      return cb(null, true);
+    }
     cb(new Error(`CORS: origin ${origin} not allowed`));
   },
   credentials: true,
-  methods: ['GET','POST','PUT','PATCH','DELETE'],
-  allowedHeaders: ['Content-Type','X-CSRF-Token'],
+  methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','X-CSRF-Token','Authorization'],
 }));
+
 
 // ── Body parsers ───────────────────────────────────────────────────
 app.use(express.json({ limit: '2mb' }));
@@ -79,6 +88,7 @@ app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
 // ── Session ────────────────────────────────────────────────────────
 const SESSION_SECRET = process.env.SESSION_SECRET || 'arkavia-dev-secret-change-in-prod';
+const isProduction = process.env.NODE_ENV === 'production';
 app.use(session({
   store: new SQLiteStore({ db: 'sessions.db', dir: path.join(__dirname, 'db') }),
   secret: SESSION_SECRET,
@@ -87,11 +97,14 @@ app.use(session({
   name: 'arkavia.sid',
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    // Production (cross-domain Netlify ↔ Railway): secure=true, sameSite=none
+    // Development (localhost): secure=false, sameSite=lax
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
     maxAge: 8 * 60 * 60 * 1000, // 8 hours
   },
 }));
+
 
 // ── Rate limiting ──────────────────────────────────────────────────
 // Development: higher limit so automated tests don't block manual logins
